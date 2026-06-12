@@ -11,24 +11,13 @@ use {
     },
 };
 
-pub struct State {
+pub struct Renderer {
     surface: wgpu::Surface<'static>,
     device: wgpu::Device,
     queue: wgpu::Queue,
     config: wgpu::SurfaceConfiguration,
     window: Arc<Window>,
     is_surface_configured: bool,
-
-    render_pipelines: Vec<wgpu::RenderPipeline>,
-    current_pipeline_index: u32,
-    vertex_buffer: wgpu::Buffer,
-
-    num_vertices: u32,
-    index_buffer: wgpu::Buffer,
-    num_indices: u32,
-
-    clear_color: wgpu::Color,
-    physical_size: PhysicalSize<u32>,
 }
 
 impl State {
@@ -274,28 +263,4 @@ impl State {
         Ok(())
     }
 
-    pub fn handle_keyboard_input(
-        &mut self,
-        event_loop: &ActiveEventLoop,
-        code: KeyCode,
-        is_pressed: bool,
-    ) {
-        match (code, is_pressed) {
-            (KeyCode::Escape, true) => event_loop.exit(),
-            _ => {}
-        }
     }
-
-    pub fn handle_cursor_moved(
-        &mut self,
-        event_loop: &ActiveEventLoop,
-        physical_position: PhysicalPosition<f64>,
-    ) {
-        self.clear_color = wgpu::Color {
-            r: physical_position.x / self.physical_size.width as f64,
-            g: physical_position.y / self.physical_size.height as f64,
-            b: 0.5,
-            a: 1.0,
-        };
-    }
-}
