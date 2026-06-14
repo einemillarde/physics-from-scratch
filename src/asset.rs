@@ -1,6 +1,6 @@
-pub mod default;
 pub mod material;
 pub mod mesh;
+pub mod preset;
 pub mod texture;
 
 use {crate::asset::texture::Texture, std::collections::HashMap};

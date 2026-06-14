@@ -1,14 +1,10 @@
 use {
-    crate::{
-        input::Input,
-        asset::AssetManager,
-        rendering::renderer::Renderer,
-        scene::Scene,
-        scene
-    },
+    crate::{asset::AssetManager, rendering::renderer::Renderer, scene, scene::Scene},
     std::sync::Arc,
+    std::time::Instant,
     winit::{
         application::ApplicationHandler,
+        dpi::PhysicalPosition,
         event::{KeyEvent, WindowEvent},
         event_loop::ActiveEventLoop,
         keyboard::PhysicalKey,
@@ -26,6 +22,7 @@ pub struct App {
     window: Option<Arc<Window>>,
     scene: Option<Scene>,
     asset_manager: Option<AssetManager>,
+    last_update: Instant,
 }
 
 impl App {
@@ -40,7 +37,35 @@ impl App {
             window: None,
             scene: None,
             asset_manager: None,
+            last_update: Instant::now(),
         }
+    }
+
+    fn update(&mut self) {
+        let now = Instant::now();
+        let dt = now.duration_since(self.last_update).as_secs_f32();
+        self.last_update = now;
+
+        let scene = self.scene.as_mut().unwrap();
+
+        scene.update(dt);
+    }
+
+    fn handle_keyboard_input(
+        &mut self,
+        _event_loop: &ActiveEventLoop,
+        code: winit::keyboard::KeyCode,
+        is_pressed: bool,
+    ) {
+        let scene = self.scene.as_mut().unwrap();
+        scene.camera.handle_keyboard_input(code, is_pressed);
+    }
+
+    fn handle_cursor_moved(
+        &mut self,
+        _event_loop: &ActiveEventLoop,
+        _physical_position: PhysicalPosition<f64>,
+    ) {
     }
 }
 
@@ -80,7 +105,12 @@ impl ApplicationHandler<Renderer> for App {
 
         let asset_manager = self.asset_manager.as_ref().unwrap();
 
-        self.scene = Some(scene::scene_1::create_scene(&renderer, asset_manager));
+        self.scene = Some(scene::scene_1::create_scene(
+            &renderer.device,
+            &renderer.pipeline.material_layout,
+            asset_manager,
+        ));
+        self.last_update = Instant::now();
 
         #[cfg(target_arch = "wasm32")]
         {
@@ -118,20 +148,21 @@ impl ApplicationHandler<Renderer> for App {
         _window_id: winit::window::WindowId,
         event: WindowEvent,
     ) {
-        let renderer = match &mut self.renderer {
-            Some(canvas) => canvas,
-            None => return,
-        };
-
         match event {
             WindowEvent::CloseRequested => event_loop.exit(),
-            WindowEvent::Resized(size) => renderer.resize(size.width, size.height),
+            WindowEvent::Resized(size) => self.renderer.as_ref().unwrap().resize(
+                size.width,
+                size.height,
+                &mut self.scene.as_mut().unwrap().camera,
+            ),
             WindowEvent::RedrawRequested => {
+                self.update();
                 self.window.as_ref().unwrap().request_redraw();
-                let _ = renderer
-                    .render(
-                        self.scene.as_ref().unwrap(),
-                    )
+                let _ = self
+                    .renderer
+                    .as_ref()
+                    .unwrap()
+                    .render(self.scene.as_ref().unwrap())
                     .unwrap();
             }
             WindowEvent::KeyboardInput {
@@ -142,11 +173,11 @@ impl ApplicationHandler<Renderer> for App {
                         ..
                     },
                 ..
-            } => Input::handle_keyboard_input(event_loop, code, key_state.is_pressed()),
+            } => self.handle_keyboard_input(event_loop, code, key_state.is_pressed()),
             WindowEvent::CursorMoved {
                 position: physical_position,
                 ..
-            } => Input::handle_cursor_moved(event_loop, physical_position),
+            } => self.handle_cursor_moved(event_loop, physical_position),
             _ => {}
         }
     }

@@ -2,9 +2,9 @@ use {app::App, winit::event_loop::EventLoop};
 
 pub mod app;
 pub mod asset;
+pub mod math;
 pub mod rendering;
 pub mod scene;
-pub mod input;
 
 pub fn run() -> anyhow::Result<()> {
     #[cfg(not(target_arch = "wasm32"))]

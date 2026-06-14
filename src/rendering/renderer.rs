@@ -1,5 +1,11 @@
 use {
-    crate::{rendering::pipeline::Pipeline, scene::Scene},
+    crate::{
+        rendering::{
+            camera::{CameraGpu, CameraUniform},
+            pipeline::Pipeline,
+        },
+        scene::{Scene, camera::Camera},
+    },
     std::{iter, sync::Arc},
     winit::window::Window,
 };
@@ -9,6 +15,7 @@ pub struct Renderer {
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub pipeline: Pipeline,
+    pub camera: CameraGpu,
 }
 
 impl Renderer {
@@ -80,6 +87,8 @@ impl Renderer {
             wgpu::TextureFormat::Bgra8UnormSrgb,
         );
 
+        let camera = CameraGpu::new(&device, &pipeline.camera_layout);
+
         surface.configure(&device, &config);
 
         Ok(Self {
@@ -87,10 +96,11 @@ impl Renderer {
             device,
             queue,
             pipeline,
+            camera,
         })
     }
 
-    pub fn resize(&mut self, width: u32, height: u32) {
+    pub fn resize(&self, width: u32, height: u32, camera: &mut Camera) {
         if !(width > 0 && height > 0) {
             return;
         };
@@ -106,9 +116,11 @@ impl Renderer {
             config.height = height.min(2048);
         }
         self.surface.configure(&self.device, &config);
+
+        camera.aspect_ratio = config.width as f32 / config.height as f32
     }
 
-    pub fn render(&mut self, scene: &Scene) -> anyhow::Result<()> {
+    pub fn render(&self, scene: &Scene) -> anyhow::Result<()> {
         let config = self.surface.get_configuration().unwrap();
 
         let output = match self.surface.get_current_texture() {
@@ -141,6 +153,8 @@ impl Renderer {
                 label: Some("Render encoder"),
             });
 
+        self.update_camera(&scene.camera);
+
         {
             let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("Render Pass"),
@@ -166,6 +180,8 @@ impl Renderer {
 
             self.pipeline.bind(&mut render_pass);
 
+            self.camera.bind(&mut render_pass);
+
             scene.render(&mut render_pass);
         }
 
@@ -173,5 +189,14 @@ impl Renderer {
         output.present();
 
         Ok(())
+    }
+
+    pub fn update_camera(&self, camera: &Camera) {
+        let uniform = CameraUniform {
+            view: camera.build_view_matrix().to_cols_array_2d(),
+            projection: camera.build_projection_matrix().to_cols_array_2d(),
+        };
+
+        self.camera.set_uniform(&self.queue, uniform);
     }
 }

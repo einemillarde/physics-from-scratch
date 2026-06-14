@@ -3,6 +3,7 @@ use crate::rendering::vertex::Vertex;
 pub struct Pipeline {
     pub pipeline: wgpu::RenderPipeline,
     pub material_layout: wgpu::BindGroupLayout,
+    pub camera_layout: wgpu::BindGroupLayout,
 }
 
 impl Pipeline {
@@ -39,14 +40,28 @@ impl Pipeline {
             ],
         });
 
+        let camera_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+            label: Some("Camera Layout"),
+            entries: &[wgpu::BindGroupLayoutEntry {
+                binding: 0,
+                visibility: wgpu::ShaderStages::VERTEX,
+                ty: wgpu::BindingType::Buffer {
+                    ty: wgpu::BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            }],
+        });
+
         let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: Some("Material Pipeline Layout"),
-            bind_group_layouts: &[Some(&material_layout)],
+            label: Some("Pipeline Layout"),
+            bind_group_layouts: &[Some(&material_layout), Some(&camera_layout)],
             immediate_size: 0,
         });
 
         let pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("Material Pipeline"),
+            label: Some("Pipeline"),
             layout: Some(&pipeline_layout),
 
             vertex: wgpu::VertexState {
@@ -92,6 +107,7 @@ impl Pipeline {
         Self {
             pipeline,
             material_layout,
+            camera_layout,
         }
     }
 }
