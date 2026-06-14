@@ -23,6 +23,8 @@ pub struct Camera {
     turn_left_pressed: bool,
     turn_up_pressed: bool,
     turn_down_pressed: bool,
+    pitch: f32,
+    yaw: f32
 }
 
 impl Camera {
@@ -35,6 +37,13 @@ impl Camera {
         move_speed: f32,
         turn_speed: f32,
     ) -> Self {
+        let forward = transform.rotation * Vec3::NEG_Z;
+
+        let yaw = forward.x.atan2(-forward.z);
+
+        let horizontal_length = (forward.x * forward.x + forward.z * forward.z).sqrt();
+        let pitch = forward.y.atan2(horizontal_length);
+
         Self {
             transform,
             aspect_ratio,
@@ -53,6 +62,8 @@ impl Camera {
             turn_left_pressed: false,
             turn_up_pressed: false,
             turn_down_pressed: false,
+            yaw,
+            pitch
         }
     }
     pub fn build_view_matrix(&self) -> Mat4 {
@@ -108,11 +119,16 @@ impl Camera {
         self.transform.position += right_vel * (self.transform.rotation * Vec3::X) * dt;
         self.transform.position += up_vel * (self.transform.rotation * Vec3::Y) * dt;
 
-        let yaw = Quat::from_axis_angle(Vec3::Y, -turn_right_vel * dt);
-        self.transform.rotation = yaw * self.transform.rotation;
+        self.yaw += -turn_right_vel * dt;
+        self.pitch += turn_up_vel * dt;
 
-        let pitch = Quat::from_rotation_x(turn_up_vel * dt);
-        self.transform.rotation = self.transform.rotation * pitch;
+        let limit = 90_f32.to_radians() - 0.001; 
+        self.pitch = self.pitch.clamp(-limit, limit);
+
+        let yaw_quat = Quat::from_rotation_y(self.yaw);
+        let pitch_quat = Quat::from_rotation_x(self.pitch);
+
+        self.transform.rotation = yaw_quat * pitch_quat;
     }
 
     pub fn handle_keyboard_input(&mut self, code: KeyCode, is_pressed: bool) {
