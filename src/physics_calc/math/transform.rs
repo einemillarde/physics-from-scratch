@@ -21,12 +21,20 @@ impl Transform {
     }
 
     pub fn from_pos_rot_scale(position: Vec3, rotation: Quat, scale: Vec3) -> Transform {
-        Transform { position, rotation, scale }
+        Transform {
+            position,
+            rotation,
+            scale,
+        }
     }
 }
 
 impl Default for Transform {
     fn default() -> Self {
-        Transform { position: Vec3::default(), rotation: Quat::default(), scale: Vec3::splat(1.0) }
+        Transform {
+            position: Vec3::default(),
+            rotation: Quat::default(),
+            scale: Vec3::splat(1.0),
+        }
     }
 }

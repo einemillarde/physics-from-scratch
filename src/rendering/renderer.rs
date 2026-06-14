@@ -1,5 +1,5 @@
 use {
-    crate::scene::Scene,
+    crate::{rendering::pipeline::Pipeline, scene::Scene},
     std::{iter, sync::Arc},
     winit::window::Window,
 };
@@ -8,6 +8,7 @@ pub struct Renderer {
     pub surface: wgpu::Surface<'static>,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
+    pub pipeline: Pipeline,
 }
 
 impl Renderer {
@@ -73,12 +74,19 @@ impl Renderer {
             desired_maximum_frame_latency: 2,
         };
 
+        let pipeline = Pipeline::new(
+            &device,
+            wgpu::include_wgsl!("../shaders/shader.wgsl"),
+            wgpu::TextureFormat::Bgra8UnormSrgb,
+        );
+
         surface.configure(&device, &config);
 
         Ok(Self {
             surface,
             device,
             queue,
+            pipeline,
         })
     }
 
@@ -100,7 +108,7 @@ impl Renderer {
         self.surface.configure(&self.device, &config);
     }
 
-    pub fn render(&mut self, clear_color: wgpu::Color, scene: &Scene) -> anyhow::Result<()> {
+    pub fn render(&mut self, scene: &Scene) -> anyhow::Result<()> {
         let config = self.surface.get_configuration().unwrap();
 
         let output = match self.surface.get_current_texture() {
@@ -140,7 +148,12 @@ impl Renderer {
                     view: &view,
                     resolve_target: None,
                     ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(clear_color),
+                        load: wgpu::LoadOp::Clear(wgpu::Color {
+                            r: 0.0,
+                            g: 0.0,
+                            b: 0.0,
+                            a: 1.0,
+                        }),
                         store: wgpu::StoreOp::Store,
                     },
                     depth_slice: None,
@@ -150,6 +163,8 @@ impl Renderer {
                 timestamp_writes: None,
                 multiview_mask: None,
             });
+
+            self.pipeline.bind(&mut render_pass);
 
             scene.render(&mut render_pass);
         }

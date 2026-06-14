@@ -1,9 +1,8 @@
-use super::super::{math::transform::Transform, asset::{material::Material, mesh::Mesh},};
+use crate::asset::{material::Material, mesh::Mesh};
 
 pub struct Entity {
-    pub transform: Transform,
     pub mesh: Mesh,
-    pub material: Material
+    pub material: Material,
 }
 
 impl Entity {

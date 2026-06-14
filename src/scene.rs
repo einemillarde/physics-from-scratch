@@ -1,9 +1,10 @@
 pub mod entity;
+pub mod scene_1;
 
 use entity::Entity;
 
 pub struct Scene {
-    pub entities: Vec<Entity>
+    pub entities: Vec<Entity>,
 }
 
 impl Scene {
