@@ -44,7 +44,7 @@ impl AssetManager {
         else {
             let default_material = Material {
                 name: Some("Default Material".to_string()),
-                base_color_factor: Vec4::new(0.5, 0.5, 0.5, 1.0),
+                base_color_factor: Vec4::new(1.0, 1.0, 1.0, 1.0),
                 roughness_factor: 1.0,
                 metallic_factor: 1.0,
                 metallic_roughness_texture: None,

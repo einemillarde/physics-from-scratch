@@ -11,14 +11,18 @@ use {
 };
 
 impl AssetManager {
-    pub fn load_glb(&mut self, path: &str) -> anyhow::Result<Scene> {
+    pub fn load_gltf(&mut self, path: &str) -> anyhow::Result<Scene> {
         self.reset();
 
         let (document, buffers, images) = gltf::import(path)?;
 
         let mut textures = Vec::<TextureHandle>::new();
         for image in images {
-            let texture = Texture::from_bytes(&image.pixels[..])?;
+            let texture = Texture {
+                width: image.width,
+                height: image.height,
+                pixels: image.pixels
+            };
             let handle = TextureHandle(self.textures.len() as u32);
             self.textures.push(texture);
             textures.push(handle);

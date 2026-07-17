@@ -36,10 +36,10 @@ struct Material {
 var<uniform> material: Material;
 
 @group(0) @binding(1)
-var t_base_color: texture_2d<f32>;
+var base_color_texture: texture_2d<f32>;
 
 @group(0) @binding(6)
-var s_base_color: sampler;
+var material_sampler: sampler;
 
 @group(1) @binding(0)
 var<uniform> camera: Camera;
@@ -62,6 +62,6 @@ fn vs_main(in: VertexInput) -> VertexOutput {
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    let tex_color = textureSample(t_base_color, s_base_color, in.uv);
+    let tex_color = textureSample(base_color_texture, material_sampler, in.uv);
     return tex_color * material.base_color_factor;
 }
