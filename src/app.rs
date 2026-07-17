@@ -1,5 +1,5 @@
 use {
-    crate::{asset::AssetManager, rendering::renderer::Renderer, scene, scene::Scene},
+    crate::{asset::AssetManager, rendering::renderer::Renderer, scene::Scene},
     std::sync::Arc,
     std::time::Instant,
     winit::{
@@ -12,12 +12,7 @@ use {
     },
 };
 
-#[cfg(target_arch = "wasm32")]
-use {wasm::bindgen::prelude::*, winit::platform::web::EventLoopExtWebSys};
-
 pub struct App {
-    #[cfg(target_arch = "wasm32")]
-    proxy: Option<winit::event_loop::EventLoopProxy<State>>,
     renderer: Option<Renderer>,
     window: Option<Arc<Window>>,
     scene: Option<Scene>,
@@ -26,13 +21,8 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(#[cfg(target_arch = "wasm32")] event_loop: &EventLoop<State>) -> Self {
-        #[cfg(target_arch = "wasm32")]
-        let proxy = Some(event_loop.create_proxy());
-
+    pub fn new() -> Self {
         Self {
-            #[cfg(target_arch = "wasm32")]
-            proxy,
             renderer: None,
             window: None,
             scene: None,
@@ -73,72 +63,36 @@ impl ApplicationHandler<Renderer> for App {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         let window_attributes = Window::default_attributes();
 
-        #[cfg(target_arch = "wasm32")]
-        {
-            use wasm_bindgen::JsCast;
-            use winit::platform::web::WindowAttributesExtWebSys;
-
-            const CANVAS_ID: &str = "canvas";
-
-            let window = wgpu::web_sys::window().unwrap_throw();
-            let document = window.document().unwrap_throw();
-            let canvas = document.get_element_by_id(CANVAS_ID).unwrap_throw();
-            let html_canvas_element = canvas.unchecked_into();
-            window_attributes = window_attributes.with_canvas(Some(html_canvas_element));
-        }
-
         self.window = Some(Arc::new(
             event_loop.create_window(window_attributes).unwrap(),
         ));
 
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            self.renderer = Some(
-                pollster::block_on(Renderer::new(self.window.as_ref().unwrap().clone())).unwrap(),
-            );
-        }
+        self.renderer =
+            Some(pollster::block_on(Renderer::new(self.window.as_ref().unwrap().clone())).unwrap());
 
-        let renderer = self.renderer.as_ref().unwrap();
+        let renderer = self.renderer.as_mut().unwrap();
 
-        self.asset_manager =
-            Some(AssetManager::new().load_default_assets(&renderer.device, &renderer.queue));
+        self.asset_manager = Some(AssetManager::new());
 
-        let asset_manager = self.asset_manager.as_ref().unwrap();
+        let asset_manager = self.asset_manager.as_mut().unwrap();
 
-        self.scene = Some(scene::scene_1::create_scene(
-            &renderer.device,
-            &renderer.pipeline.material_layout,
-            asset_manager,
-        ));
-        self.last_update = Instant::now();
+        self.scene = Some(asset_manager
+            .load_glb("assets/test_scene_1.glb").unwrap());
 
-        #[cfg(target_arch = "wasm32")]
-        {
-            if let Some(proxy) = self.proxy.take() {
-                wasm_bindgen_futures::spawn_local(async move {
-                    assert!(
-                        proxy
-                            .send_event(
-                                State::new(self.window)
-                                    .await
-                                    .expect("Unable to create canvas!!!")
-                            )
-                            .is_ok()
-                    )
-                });
-            }
-        }
+        renderer
+            .resources
+            .load_assets(
+                &renderer.device,
+                &renderer.queue,
+                asset_manager,
+                self.scene.as_ref().unwrap(),
+                &renderer.pipeline.material_layout,
+                &renderer.pipeline.object_layout,
+            )
+            .unwrap();
     }
 
     fn user_event(&mut self, _event_loop: &ActiveEventLoop, event: Renderer) {
-        #[cfg(target_arch = "wasm32")]
-        {
-            event.window.request_redraw();
-            event.resize(
-                event.window.inner_size().width,
-                event.window.inner_size().height,
-            );
-        }
         self.renderer = Some(event);
     }
 
@@ -150,7 +104,7 @@ impl ApplicationHandler<Renderer> for App {
     ) {
         match event {
             WindowEvent::CloseRequested => event_loop.exit(),
-            WindowEvent::Resized(size) => self.renderer.as_ref().unwrap().resize(
+            WindowEvent::Resized(size) => self.renderer.as_mut().unwrap().resize(
                 size.width,
                 size.height,
                 &mut self.scene.as_mut().unwrap().camera,
@@ -158,11 +112,13 @@ impl ApplicationHandler<Renderer> for App {
             WindowEvent::RedrawRequested => {
                 self.update();
                 self.window.as_ref().unwrap().request_redraw();
-                let _ = self
-                    .renderer
+                self.renderer
                     .as_ref()
                     .unwrap()
-                    .render(self.scene.as_ref().unwrap())
+                    .render(
+                        self.scene.as_ref().unwrap(),
+                        self.asset_manager.as_ref().unwrap(),
+                    )
                     .unwrap();
             }
             WindowEvent::KeyboardInput {

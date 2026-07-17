@@ -1,18 +1,30 @@
 pub mod camera;
 pub mod entity;
-pub mod scene_1;
 
-use {camera::Camera, entity::Entity};
+use {
+    crate::{asset::AssetManager, rendering::resources::GpuResources},
+    camera::Camera,
+    entity::Object,
+};
 
+#[derive(Clone)]
 pub struct Scene {
-    pub entities: Vec<Entity>,
+    pub objects: Vec<Object>,
     pub camera: Camera,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct ObjectHandle(pub u32);
+
 impl Scene {
-    pub fn render<'a>(&'a self, render_pass: &mut wgpu::RenderPass<'a>) {
-        for entity in self.entities.iter() {
-            entity.render(render_pass);
+    pub fn render<'a>(
+        &'a self,
+        render_pass: &mut wgpu::RenderPass<'a>,
+        gpu_resources: &'a GpuResources,
+        asset_manager: &'a AssetManager,
+    ) {
+        for object in self.objects.iter() {
+            object.render(render_pass, gpu_resources, asset_manager);
         }
     }
 

@@ -1,0 +1,119 @@
+pub mod material;
+pub mod mesh;
+pub mod texture;
+pub mod object;
+
+use {
+    crate::{asset::{AssetManager, MaterialHandle, MeshHandle, TextureHandle, texture::Texture}, scene::{Scene, ObjectHandle}}, material::MaterialGpu, mesh::MeshGpu, object::{ObjectGpu, ObjectUniform}, texture::TextureGpu,
+};
+
+#[derive(Clone)]
+pub struct GpuResources {
+    pub meshes: Vec<MeshGpu>,
+    pub textures: Vec<TextureGpu>,
+    pub materials: Vec<MaterialGpu>,
+    pub objects: Vec<ObjectGpu>
+}
+
+impl GpuResources {
+    pub fn new() -> Self {
+        Self {
+            meshes: vec![],
+            textures: vec![],
+            materials: vec![],
+            objects: vec![]
+        }
+    }
+
+    pub fn reset(&mut self) {
+        *self = Self::new();
+    }
+
+    pub fn load_assets(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        asset_manager: &AssetManager,
+        scene: &Scene,
+        material_layout: &wgpu::BindGroupLayout,
+        object_layout: &wgpu::BindGroupLayout
+    ) -> anyhow::Result<()> {
+        self.reset();
+
+        let default_white_texture = TextureGpu::new(
+            device,
+            queue,
+            &Texture {
+                pixels: vec![255, 255, 255, 255],
+                width: 1,
+                height: 1,
+            },
+        )?;
+
+        let default_black_texture = TextureGpu::new(
+            device,
+            queue,
+            &Texture {
+                pixels: vec![0, 0, 0, 255],
+                width: 1,
+                height: 1,
+            },
+        )?;
+
+        let default_normal_texture = TextureGpu::new(
+            device,
+            queue,
+            &Texture {
+                pixels: vec![128, 128, 255, 255],
+                width: 1,
+                height: 1,
+            },
+        )?;
+
+        for mesh in asset_manager.meshes.iter() {
+            self.meshes.push(MeshGpu::new(device, &mesh));
+        }
+
+        for texture in asset_manager.textures.iter() {
+            self.textures
+                .push(TextureGpu::new(device, queue, &texture)?);
+        }
+
+        for material in asset_manager.materials.iter() {
+            self.materials.push(MaterialGpu::new(
+                device,
+                material_layout,
+                &material,
+                &self,
+                &default_white_texture,
+                &default_normal_texture,
+                &default_black_texture,
+            )?);
+        }
+
+        for object in &scene.objects {
+            let uniform = ObjectUniform::from(object);
+            let gpu_resource = ObjectGpu::new(device, object_layout);
+            gpu_resource.set_uniform(queue, uniform);
+            self.objects.push(gpu_resource);
+        }
+
+        Ok(())
+    }
+
+    pub fn get_mesh(&self, handle: MeshHandle) -> Option<&MeshGpu> {
+        self.meshes.get(handle.0 as usize)
+    }
+
+    pub fn get_material(&self, handle: MaterialHandle) -> Option<&MaterialGpu> {
+        self.materials.get(handle.0 as usize)
+    }
+
+    pub fn get_texture(&self, handle: TextureHandle) -> Option<&TextureGpu> {
+        self.textures.get(handle.0 as usize)
+    }
+
+    pub fn get_object(&self, handle: ObjectHandle) -> Option<&ObjectGpu> {
+        self.objects.get(handle.0 as usize)
+    }
+}

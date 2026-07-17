@@ -1,8 +1,10 @@
 use {
     crate::{
+        asset::AssetManager,
         rendering::{
             camera::{CameraGpu, CameraUniform},
             pipeline::Pipeline,
+            resources::{GpuResources, texture::TextureGpu},
         },
         scene::{Scene, camera::Camera},
     },
@@ -15,7 +17,9 @@ pub struct Renderer {
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub pipeline: Pipeline,
-    pub camera: CameraGpu,
+    camera_gpu: CameraGpu,
+    depth_texture: TextureGpu,
+    pub resources: GpuResources
 }
 
 impl Renderer {
@@ -23,10 +27,7 @@ impl Renderer {
         let physical_size = window.inner_size();
 
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
-            #[cfg(not(target_arch = "wasm32"))]
             backends: wgpu::Backends::PRIMARY,
-            #[cfg(target_arch = "wasm32")]
-            backends: wgpu::Backends::GL,
             flags: Default::default(),
             memory_budget_thresholds: Default::default(),
             backend_options: Default::default(),
@@ -87,7 +88,16 @@ impl Renderer {
             wgpu::TextureFormat::Bgra8UnormSrgb,
         );
 
-        let camera = CameraGpu::new(&device, &pipeline.camera_layout);
+        let camera_gpu = CameraGpu::new(&device, &pipeline.camera_layout);
+
+        let depth_texture = TextureGpu::create_depth_texture(
+            &device,
+            physical_size.width,
+            physical_size.height,
+            "Depth texture",
+        );
+
+        let resources = GpuResources::new();
 
         surface.configure(&device, &config);
 
@@ -96,31 +106,34 @@ impl Renderer {
             device,
             queue,
             pipeline,
-            camera,
+            camera_gpu,
+            depth_texture,
+            resources
         })
     }
 
-    pub fn resize(&self, width: u32, height: u32, camera: &mut Camera) {
+    pub fn resize(&mut self, width: u32, height: u32, camera: &mut Camera) {
         if !(width > 0 && height > 0) {
             return;
         };
         let mut config = self.surface.get_configuration().unwrap();
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            config.width = width;
-            config.height = height;
-        }
-        #[cfg(target_arch = "wasm32")]
-        {
-            config.width = width.min(2048);
-            config.height = height.min(2048);
-        }
+
+        config.width = width;
+        config.height = height;
+
         self.surface.configure(&self.device, &config);
+
+        self.depth_texture = TextureGpu::create_depth_texture(
+            &self.device,
+            config.width,
+            config.height,
+            "Depth texture",
+        );
 
         camera.aspect_ratio = config.width as f32 / config.height as f32
     }
 
-    pub fn render(&self, scene: &Scene) -> anyhow::Result<()> {
+    pub fn render(&self, scene: &Scene, asset_manager: &AssetManager) -> anyhow::Result<()> {
         let config = self.surface.get_configuration().unwrap();
 
         let output = match self.surface.get_current_texture() {
@@ -172,7 +185,14 @@ impl Renderer {
                     },
                     depth_slice: None,
                 })],
-                depth_stencil_attachment: None,
+                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                    view: &self.depth_texture.view,
+                    depth_ops: Some(wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(1.0),
+                        store: wgpu::StoreOp::Store,
+                    }),
+                    stencil_ops: None,
+                }),
                 occlusion_query_set: None,
                 timestamp_writes: None,
                 multiview_mask: None,
@@ -180,9 +200,9 @@ impl Renderer {
 
             self.pipeline.bind(&mut render_pass);
 
-            self.camera.bind(&mut render_pass);
+            self.camera_gpu.bind(&mut render_pass);
 
-            scene.render(&mut render_pass);
+            scene.render(&mut render_pass, &self.resources, asset_manager);
         }
 
         self.queue.submit(iter::once(encoder.finish()));
@@ -197,6 +217,6 @@ impl Renderer {
             projection: camera.build_projection_matrix().to_cols_array_2d(),
         };
 
-        self.camera.set_uniform(&self.queue, uniform);
+        self.camera_gpu.set_uniform(&self.queue, uniform);
     }
 }

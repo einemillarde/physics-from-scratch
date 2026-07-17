@@ -1,12 +1,13 @@
-use wgpu::util::DeviceExt;
+use {glam::Mat4, wgpu::util::DeviceExt};
 
 #[repr(C)]
-#[derive(Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct CameraUniform {
     pub view: [[f32; 4]; 4],
     pub projection: [[f32; 4]; 4],
 }
 
+#[derive(Clone)]
 pub struct CameraGpu {
     pub buffer: wgpu::Buffer,
     pub bind_group: wgpu::BindGroup,
@@ -14,10 +15,7 @@ pub struct CameraGpu {
 
 impl CameraGpu {
     pub fn new(device: &wgpu::Device, layout: &wgpu::BindGroupLayout) -> Self {
-        let initial_data = CameraUniform {
-            view: glam::Mat4::IDENTITY.to_cols_array_2d(),
-            projection: glam::Mat4::IDENTITY.to_cols_array_2d(),
-        };
+        let initial_data = CameraUniform::default();
 
         let buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("Camera Buffer"),
@@ -43,5 +41,14 @@ impl CameraGpu {
 
     pub fn bind<'a>(&'a self, render_pass: &mut wgpu::RenderPass<'a>) {
         render_pass.set_bind_group(1, &self.bind_group, &[]);
+    }
+}
+
+impl Default for CameraUniform {
+    fn default() -> Self {
+        Self {
+            view: Mat4::IDENTITY.to_cols_array_2d(),
+            projection: Mat4::IDENTITY.to_cols_array_2d(),
+        }
     }
 }
