@@ -4,14 +4,17 @@ pub mod mesh;
 pub mod texture;
 pub mod vertex;
 
-use {crate::asset::{material::Material, mesh::Mesh, texture::Texture}, glam::{Vec3, Vec4}};
+use {
+    crate::asset::{material::Material, mesh::Mesh, texture::Texture},
+    glam::{Vec3, Vec4},
+};
 
 #[derive(Clone)]
 pub struct AssetManager {
     pub textures: Vec<Texture>,
     pub meshes: Vec<Mesh>,
     pub materials: Vec<Material>,
-    default_material_handle: Option<MaterialHandle>
+    default_material_handle: Option<MaterialHandle>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -29,7 +32,7 @@ impl AssetManager {
             textures: vec![],
             meshes: vec![],
             materials: vec![],
-            default_material_handle: None
+            default_material_handle: None,
         }
     }
 
@@ -40,8 +43,7 @@ impl AssetManager {
     pub fn default_material(&mut self) -> MaterialHandle {
         if self.default_material_handle.is_some() {
             return self.default_material_handle.unwrap();
-        }
-        else {
+        } else {
             let default_material = Material {
                 name: Some("Default Material".to_string()),
                 base_color_factor: Vec4::new(1.0, 1.0, 1.0, 1.0),
@@ -52,7 +54,7 @@ impl AssetManager {
                 normal_texture: None,
                 occlusion_texture: None,
                 emissive_factor: Vec3::new(0.0, 0.0, 0.0),
-                emissive_texture: None
+                emissive_texture: None,
             };
             let handle = MaterialHandle(self.materials.len() as u32);
             self.materials.push(default_material);

@@ -12,6 +12,7 @@ impl TextureGpu {
         device: &wgpu::Device,
         queue: &wgpu::Queue,
         texture_data: &Texture,
+        format: wgpu::TextureFormat,
     ) -> anyhow::Result<Self> {
         let size = wgpu::Extent3d {
             width: texture_data.width,
@@ -25,7 +26,7 @@ impl TextureGpu {
             mip_level_count: 1,
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
-            format: wgpu::TextureFormat::Rgba8UnormSrgb,
+            format,
             usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
             view_formats: &[],
         });

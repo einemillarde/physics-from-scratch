@@ -1,10 +1,17 @@
 pub mod material;
 pub mod mesh;
-pub mod texture;
 pub mod object;
+pub mod texture;
 
 use {
-    crate::{asset::{AssetManager, MaterialHandle, MeshHandle, TextureHandle, texture::Texture}, scene::{Scene, ObjectHandle}}, material::MaterialGpu, mesh::MeshGpu, object::{ObjectGpu, ObjectUniform}, texture::TextureGpu,
+    crate::{
+        asset::{AssetManager, MaterialHandle, MeshHandle, TextureHandle, texture::Texture},
+        scene::{ObjectHandle, Scene},
+    },
+    material::MaterialGpu,
+    mesh::MeshGpu,
+    object::{ObjectGpu, ObjectUniform},
+    texture::TextureGpu,
 };
 
 #[derive(Clone)]
@@ -12,7 +19,7 @@ pub struct GpuResources {
     pub meshes: Vec<MeshGpu>,
     pub textures: Vec<TextureGpu>,
     pub materials: Vec<MaterialGpu>,
-    pub objects: Vec<ObjectGpu>
+    pub objects: Vec<ObjectGpu>,
 }
 
 impl GpuResources {
@@ -21,7 +28,7 @@ impl GpuResources {
             meshes: vec![],
             textures: vec![],
             materials: vec![],
-            objects: vec![]
+            objects: vec![],
         }
     }
 
@@ -36,7 +43,7 @@ impl GpuResources {
         asset_manager: &AssetManager,
         scene: &Scene,
         material_layout: &wgpu::BindGroupLayout,
-        object_layout: &wgpu::BindGroupLayout
+        object_layout: &wgpu::BindGroupLayout,
     ) -> anyhow::Result<()> {
         self.reset();
 
@@ -48,6 +55,7 @@ impl GpuResources {
                 width: 1,
                 height: 1,
             },
+            wgpu::TextureFormat::Rgba8Unorm,
         )?;
 
         let default_black_texture = TextureGpu::new(
@@ -58,6 +66,7 @@ impl GpuResources {
                 width: 1,
                 height: 1,
             },
+            wgpu::TextureFormat::Rgba8Unorm,
         )?;
 
         let default_normal_texture = TextureGpu::new(
@@ -68,6 +77,7 @@ impl GpuResources {
                 width: 1,
                 height: 1,
             },
+            wgpu::TextureFormat::Rgba8Unorm,
         )?;
 
         for mesh in asset_manager.meshes.iter() {
@@ -75,8 +85,12 @@ impl GpuResources {
         }
 
         for texture in asset_manager.textures.iter() {
-            self.textures
-                .push(TextureGpu::new(device, queue, &texture)?);
+            self.textures.push(TextureGpu::new(
+                device,
+                queue,
+                &texture,
+                wgpu::TextureFormat::Rgba8Unorm,
+            )?);
         }
 
         for material in asset_manager.materials.iter() {

@@ -76,8 +76,7 @@ impl ApplicationHandler<Renderer> for App {
 
         let asset_manager = self.asset_manager.as_mut().unwrap();
 
-        self.scene = Some(asset_manager
-            .load_gltf("assets/test_scene_1.gltf").unwrap());
+        self.scene = Some(asset_manager.load_gltf("assets/test_scene_1.gltf").unwrap());
 
         renderer
             .resources

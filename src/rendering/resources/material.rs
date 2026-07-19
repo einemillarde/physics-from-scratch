@@ -1,5 +1,8 @@
 use {
-    crate::{asset::material::Material, rendering::resources::{GpuResources, texture::TextureGpu}},
+    crate::{
+        asset::material::Material,
+        rendering::resources::{GpuResources, texture::TextureGpu},
+    },
     wgpu::util::DeviceExt,
 };
 

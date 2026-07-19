@@ -19,7 +19,7 @@ pub struct Renderer {
     pub pipeline: Pipeline,
     camera_gpu: CameraGpu,
     depth_texture: TextureGpu,
-    pub resources: GpuResources
+    pub resources: GpuResources,
 }
 
 impl Renderer {
@@ -108,7 +108,7 @@ impl Renderer {
             pipeline,
             camera_gpu,
             depth_texture,
-            resources
+            resources,
         })
     }
 

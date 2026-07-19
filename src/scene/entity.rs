@@ -10,7 +10,7 @@ pub struct Object {
     pub mesh: Option<MeshHandle>,
     pub transform: Transform,
     pub children: Vec<ObjectHandle>,
-    pub resource_handle: ObjectHandle
+    pub resource_handle: ObjectHandle,
 }
 
 impl Object {

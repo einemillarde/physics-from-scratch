@@ -21,7 +21,7 @@ impl AssetManager {
             let texture = Texture {
                 width: image.width,
                 height: image.height,
-                pixels: image.pixels
+                pixels: image.pixels,
             };
             let handle = TextureHandle(self.textures.len() as u32);
             self.textures.push(texture);
@@ -79,6 +79,7 @@ impl AssetManager {
                 let positions = reader.read_positions().unwrap();
                 let normals = reader.read_normals().unwrap();
                 let texcoords = reader.read_tex_coords(0).unwrap().into_f32();
+                let tangents = reader.read_tangents().unwrap();
 
                 let indices: Vec<u16> = reader
                     .read_indices()
@@ -90,10 +91,12 @@ impl AssetManager {
                 let vertices: Vec<Vertex> = positions
                     .zip(normals)
                     .zip(texcoords)
-                    .map(|((position, normal), uv)| Vertex {
+                    .zip(tangents)
+                    .map(|(((position, normal), uv), tangent)| Vertex {
                         position,
                         normal,
                         uv,
+                        tangent,
                     })
                     .collect();
 
@@ -140,7 +143,7 @@ impl AssetManager {
                 transform,
                 mesh,
                 children,
-                resource_handle: ObjectHandle(objects.len() as u32)
+                resource_handle: ObjectHandle(objects.len() as u32),
             });
         }
 
