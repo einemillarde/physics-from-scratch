@@ -5,7 +5,12 @@ pub mod texture;
 pub mod vertex;
 
 use {
-    crate::asset::{material::Material, mesh::Mesh, texture::{ColorSpace, Texture}}, glam::{Vec3, Vec4},
+    crate::asset::{
+        material::Material,
+        mesh::Mesh,
+        texture::{ColorSpace, Texture},
+    },
+    glam::{Vec3, Vec4},
 };
 
 #[derive(Clone)]

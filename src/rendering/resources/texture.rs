@@ -1,4 +1,4 @@
-use crate::asset::texture::{Texture, ColorSpace};
+use crate::asset::texture::{ColorSpace, Texture};
 
 #[derive(Clone)]
 pub struct TextureGpu {
@@ -24,7 +24,7 @@ impl TextureGpu {
         match texture_data.color_space {
             Some(ColorSpace::Linear) => format = wgpu::TextureFormat::Rgba8Unorm,
             Some(ColorSpace::Srgb) => format = wgpu::TextureFormat::Rgba8UnormSrgb,
-            None => format = wgpu::TextureFormat::Rgba8Unorm // default
+            None => format = wgpu::TextureFormat::Rgba8Unorm, // default
         }
 
         let texture = device.create_texture(&wgpu::TextureDescriptor {

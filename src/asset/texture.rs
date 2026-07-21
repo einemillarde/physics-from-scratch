@@ -3,13 +3,13 @@ pub struct Texture {
     pub pixels: Vec<u8>,
     pub width: u32,
     pub height: u32,
-    pub color_space: Option<ColorSpace>
+    pub color_space: Option<ColorSpace>,
 }
 
 #[derive(Clone, Debug)]
 pub enum ColorSpace {
     Linear,
-    Srgb
+    Srgb,
 }
 
 impl Texture {
@@ -18,7 +18,7 @@ impl Texture {
             width,
             height,
             pixels,
-            color_space: None
+            color_space: None,
         }
     }
 
@@ -34,7 +34,7 @@ impl Texture {
             pixels: img.clone().into_bytes(),
             width: img.width(),
             height: img.height(),
-            color_space: None
+            color_space: None,
         })
     }
 

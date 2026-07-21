@@ -1,9 +1,16 @@
 use {
     crate::{
         asset::{
-            AssetManager, MaterialHandle, MeshHandle, TextureHandle, material::Material, mesh::Mesh, texture::{ColorSpace, Texture}, vertex::Vertex,
-        }, math::transform::Transform, scene::{ObjectHandle, Scene, camera::Camera, entity::Object},
-    }, glam::{Quat, Vec3, Vec4},
+            AssetManager, MaterialHandle, MeshHandle, TextureHandle,
+            material::Material,
+            mesh::Mesh,
+            texture::{ColorSpace, Texture},
+            vertex::Vertex,
+        },
+        math::transform::Transform,
+        scene::{ObjectHandle, Scene, camera::Camera, entity::Object},
+    },
+    glam::{Quat, Vec3, Vec4},
 };
 
 impl AssetManager {
@@ -25,45 +32,35 @@ impl AssetManager {
             let pbr = material.pbr_metallic_roughness();
 
             let base_color_factor = Vec4::from(pbr.base_color_factor());
-            let base_color_texture = pbr
-                .base_color_texture()
-                .map(|t| {
-                    let handle = textures[t.texture().index()];
-                    self.set_color_space(handle, ColorSpace::Srgb);
-                    handle
-                });
+            let base_color_texture = pbr.base_color_texture().map(|t| {
+                let handle = textures[t.texture().index()];
+                self.set_color_space(handle, ColorSpace::Srgb);
+                handle
+            });
             let metallic_factor = pbr.metallic_factor();
             let roughness_factor = pbr.roughness_factor();
-            let metallic_roughness_texture = pbr
-                .metallic_roughness_texture()
-                .map(|t| {
-                    let handle = textures[t.texture().index()];
-                    self.set_color_space(handle, ColorSpace::Linear);
-                    handle
-                });
+            let metallic_roughness_texture = pbr.metallic_roughness_texture().map(|t| {
+                let handle = textures[t.texture().index()];
+                self.set_color_space(handle, ColorSpace::Linear);
+                handle
+            });
             let name = material.name().map(|s| s.to_string());
-            let normal_texture = material
-                .normal_texture()
-                .map(|t| {
-                    let handle = textures[t.texture().index()];
-                    self.set_color_space(handle, ColorSpace::Linear);
-                    handle
-                });
-            let occlusion_texture = material
-                .occlusion_texture()
-                .map(|t| {
-                    let handle = textures[t.texture().index()];
-                    self.set_color_space(handle, ColorSpace::Linear);
-                    handle
-                });
+            let normal_texture = material.normal_texture().map(|t| {
+                let handle = textures[t.texture().index()];
+                self.set_color_space(handle, ColorSpace::Linear);
+                handle
+            });
+            let occlusion_texture = material.occlusion_texture().map(|t| {
+                let handle = textures[t.texture().index()];
+                self.set_color_space(handle, ColorSpace::Linear);
+                handle
+            });
             let emissive_factor = Vec3::from(material.emissive_factor());
-            let emissive_texture = material
-                .emissive_texture()
-                .map(|t| {
-                    let handle = textures[t.texture().index()];
-                    self.set_color_space(handle, ColorSpace::Srgb);
-                    handle
-                });
+            let emissive_texture = material.emissive_texture().map(|t| {
+                let handle = textures[t.texture().index()];
+                self.set_color_space(handle, ColorSpace::Srgb);
+                handle
+            });
 
             let material = Material {
                 base_color_factor,

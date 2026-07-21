@@ -47,46 +47,28 @@ impl GpuResources {
     ) -> anyhow::Result<()> {
         self.reset();
 
-        let default_base_color_texture = TextureGpu::new(
-            device,
-            queue,
-            &Texture::new(1, 1, vec![231, 231, 231, 255]),
-        )?;
+        let default_base_color_texture =
+            TextureGpu::new(device, queue, &Texture::new(1, 1, vec![231, 231, 231, 255]))?;
 
-        let default_metallic_roughness_texture = TextureGpu::new(
-            device,
-            queue,
-            &Texture::new(1, 1, vec![0, 0, 128, 255]),
-        )?;
+        let default_metallic_roughness_texture =
+            TextureGpu::new(device, queue, &Texture::new(1, 1, vec![0, 0, 128, 255]))?;
 
-        let default_normal_texture = TextureGpu::new(
-            device,
-            queue,
-            &Texture::new(1, 1, vec![128, 128, 255, 255]),
-        )?;
+        let default_normal_texture =
+            TextureGpu::new(device, queue, &Texture::new(1, 1, vec![128, 128, 255, 255]))?;
 
-        let default_occlusion_texture = TextureGpu::new(
-            device,
-            queue,
-            &Texture::new(1, 1, vec![0, 0, 0, 255]),
-        )?;
+        let default_occlusion_texture =
+            TextureGpu::new(device, queue, &Texture::new(1, 1, vec![0, 0, 0, 255]))?;
 
-        let default_emissive_texture = TextureGpu::new(
-            device,
-            queue,
-            &Texture::new(1, 1, vec![0, 0, 0, 255]),
-        )?;
+        let default_emissive_texture =
+            TextureGpu::new(device, queue, &Texture::new(1, 1, vec![0, 0, 0, 255]))?;
 
         for mesh in asset_manager.meshes.iter() {
             self.meshes.push(MeshGpu::new(device, &mesh));
         }
 
         for texture in asset_manager.textures.iter() {
-            self.textures.push(TextureGpu::new(
-                device,
-                queue,
-                &texture,
-            )?);
+            self.textures
+                .push(TextureGpu::new(device, queue, &texture)?);
         }
 
         for material in asset_manager.materials.iter() {
@@ -99,7 +81,7 @@ impl GpuResources {
                 &default_metallic_roughness_texture,
                 &default_normal_texture,
                 &default_occlusion_texture,
-                &default_emissive_texture
+                &default_emissive_texture,
             )?);
         }
 
