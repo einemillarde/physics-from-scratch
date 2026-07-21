@@ -47,37 +47,34 @@ impl GpuResources {
     ) -> anyhow::Result<()> {
         self.reset();
 
-        let default_white_texture = TextureGpu::new(
+        let default_base_color_texture = TextureGpu::new(
             device,
             queue,
-            &Texture {
-                pixels: vec![255, 255, 255, 255],
-                width: 1,
-                height: 1,
-            },
-            wgpu::TextureFormat::Rgba8Unorm,
+            &Texture::new(1, 1, vec![231, 231, 231, 255]),
         )?;
 
-        let default_black_texture = TextureGpu::new(
+        let default_metallic_roughness_texture = TextureGpu::new(
             device,
             queue,
-            &Texture {
-                pixels: vec![0, 0, 0, 255],
-                width: 1,
-                height: 1,
-            },
-            wgpu::TextureFormat::Rgba8Unorm,
+            &Texture::new(1, 1, vec![0, 0, 128, 255]),
         )?;
 
         let default_normal_texture = TextureGpu::new(
             device,
             queue,
-            &Texture {
-                pixels: vec![128, 128, 255, 255],
-                width: 1,
-                height: 1,
-            },
-            wgpu::TextureFormat::Rgba8Unorm,
+            &Texture::new(1, 1, vec![128, 128, 255, 255]),
+        )?;
+
+        let default_occlusion_texture = TextureGpu::new(
+            device,
+            queue,
+            &Texture::new(1, 1, vec![0, 0, 0, 255]),
+        )?;
+
+        let default_emissive_texture = TextureGpu::new(
+            device,
+            queue,
+            &Texture::new(1, 1, vec![0, 0, 0, 255]),
         )?;
 
         for mesh in asset_manager.meshes.iter() {
@@ -89,7 +86,6 @@ impl GpuResources {
                 device,
                 queue,
                 &texture,
-                wgpu::TextureFormat::Rgba8Unorm,
             )?);
         }
 
@@ -99,9 +95,11 @@ impl GpuResources {
                 material_layout,
                 &material,
                 &self,
-                &default_white_texture,
+                &default_base_color_texture,
+                &default_metallic_roughness_texture,
                 &default_normal_texture,
-                &default_black_texture,
+                &default_occlusion_texture,
+                &default_emissive_texture
             )?);
         }
 

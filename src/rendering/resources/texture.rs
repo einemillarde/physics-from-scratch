@@ -1,4 +1,4 @@
-use crate::asset::texture::Texture;
+use crate::asset::texture::{Texture, ColorSpace};
 
 #[derive(Clone)]
 pub struct TextureGpu {
@@ -12,13 +12,20 @@ impl TextureGpu {
         device: &wgpu::Device,
         queue: &wgpu::Queue,
         texture_data: &Texture,
-        format: wgpu::TextureFormat,
     ) -> anyhow::Result<Self> {
         let size = wgpu::Extent3d {
             width: texture_data.width,
             height: texture_data.height,
             depth_or_array_layers: 1,
         };
+
+        let format: wgpu::TextureFormat;
+
+        match texture_data.color_space {
+            Some(ColorSpace::Linear) => format = wgpu::TextureFormat::Rgba8Unorm,
+            Some(ColorSpace::Srgb) => format = wgpu::TextureFormat::Rgba8UnormSrgb,
+            None => format = wgpu::TextureFormat::Rgba8Unorm // default
+        }
 
         let texture = device.create_texture(&wgpu::TextureDescriptor {
             label: Some("Texture"),

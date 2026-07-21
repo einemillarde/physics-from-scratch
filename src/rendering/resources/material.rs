@@ -32,9 +32,11 @@ impl MaterialGpu {
         layout: &wgpu::BindGroupLayout,
         material: &Material,
         gpu_resources: &GpuResources,
-        default_white: &TextureGpu,
-        default_normal: &TextureGpu,
-        default_black: &TextureGpu,
+        default_base_color_texture: &TextureGpu,
+        default_metallic_roughness_texture: &TextureGpu,
+        default_normal_texture: &TextureGpu,
+        default_occlusion_texture: &TextureGpu,
+        default_emissive_texture: &TextureGpu,
     ) -> anyhow::Result<Self> {
         let uniform = MaterialUniform::from(material);
 
@@ -47,27 +49,27 @@ impl MaterialGpu {
         let base_color_texture = material
             .base_color_texture
             .and_then(|h| gpu_resources.get_texture(h))
-            .unwrap_or(default_white);
+            .unwrap_or(default_base_color_texture);
 
         let normal_texture = material
             .normal_texture
             .and_then(|h| gpu_resources.get_texture(h))
-            .unwrap_or(default_normal);
+            .unwrap_or(default_normal_texture);
 
         let emissive_texture = material
             .emissive_texture
             .and_then(|h| gpu_resources.get_texture(h))
-            .unwrap_or(default_white);
+            .unwrap_or(default_emissive_texture);
 
         let occlusion_texture = material
             .occlusion_texture
             .and_then(|h| gpu_resources.get_texture(h))
-            .unwrap_or(default_black);
+            .unwrap_or(default_occlusion_texture);
 
         let metallic_roughness_texture = material
             .metallic_roughness_texture
             .and_then(|h| gpu_resources.get_texture(h))
-            .unwrap_or(default_white);
+            .unwrap_or(default_metallic_roughness_texture);
 
         let bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("Material Bind Group"),

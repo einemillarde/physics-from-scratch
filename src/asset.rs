@@ -5,8 +5,7 @@ pub mod texture;
 pub mod vertex;
 
 use {
-    crate::asset::{material::Material, mesh::Mesh, texture::Texture},
-    glam::{Vec3, Vec4},
+    crate::asset::{material::Material, mesh::Mesh, texture::{ColorSpace, Texture}}, glam::{Vec3, Vec4},
 };
 
 #[derive(Clone)]
@@ -73,5 +72,10 @@ impl AssetManager {
 
     pub fn get_mesh(&self, mesh_handle: MeshHandle) -> Option<&Mesh> {
         self.meshes.get(mesh_handle.0 as usize)
+    }
+
+    pub fn set_color_space(&mut self, texture_handle: TextureHandle, color_space: ColorSpace) {
+        let texture = self.textures.get_mut(texture_handle.0 as usize).unwrap();
+        texture.set_color_space(color_space);
     }
 }
