@@ -3,7 +3,6 @@ use {
     glam::{Vec3, Vec4},
 };
 
-#[derive(Clone, Debug)]
 pub struct Material {
     pub name: Option<String>,
 

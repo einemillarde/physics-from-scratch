@@ -1,16 +1,18 @@
 pub mod camera;
 pub mod entity;
+pub mod light;
 
 use {
     crate::{asset::AssetManager, rendering::resources::GpuResources},
     camera::Camera,
     entity::Object,
+    light::Light,
 };
 
-#[derive(Clone)]
 pub struct Scene {
     pub objects: Vec<Object>,
     pub camera: Camera,
+    pub lights: Vec<Light>,
 }
 
 #[derive(Debug, Clone, Copy)]

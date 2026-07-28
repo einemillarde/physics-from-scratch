@@ -1,13 +1,12 @@
 use {crate::scene::entity::Object, glam::Mat4, wgpu::util::DeviceExt};
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+#[derive(Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct ObjectUniform {
     pub model_matrix: [[f32; 4]; 4],
     pub normal_matrix: [[f32; 4]; 4],
 }
 
-#[derive(Clone)]
 pub struct ObjectGpu {
     pub buffer: wgpu::Buffer,
     pub bind_group: wgpu::BindGroup,

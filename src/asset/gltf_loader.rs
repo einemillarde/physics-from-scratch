@@ -8,7 +8,12 @@ use {
             vertex::Vertex,
         },
         math::transform::Transform,
-        scene::{ObjectHandle, Scene, camera::Camera, entity::Object},
+        scene::{
+            ObjectHandle, Scene,
+            camera::Camera,
+            entity::Object,
+            light::{Light, directional::DirectionalLight, point::PointLight},
+        },
     },
     glam::{Quat, Vec3, Vec4},
 };
@@ -167,6 +172,26 @@ impl AssetManager {
         );
         camera.transform.position.z = 3.0;
 
-        Ok(Scene { objects, camera })
+        let lights: Vec<Light> = vec![
+            PointLight::new(Vec3::new(0.0, 0.0, 2.0), Vec3::new(0.0, 0.0, 1.0), 5.0).into(),
+            DirectionalLight::new(
+                Vec3::new(-1.0, -1.0, -1.0),
+                Vec3::new(0.929, 0.835, 0.620),
+                1.0,
+            )
+            .into(),
+            DirectionalLight::new(
+                Vec3::new(1.0, 0.0, 0.0),
+                Vec3::new(0.8, 0.4, 0.4),
+                1.0,
+            )
+            .into(),
+        ];
+
+        Ok(Scene {
+            objects,
+            camera,
+            lights,
+        })
     }
 }

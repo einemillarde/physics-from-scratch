@@ -78,6 +78,10 @@ impl ApplicationHandler<Renderer> for App {
 
         self.scene = Some(asset_manager.load_gltf("assets/test_scene_1.gltf").unwrap());
 
+        let scene = self.scene.as_ref().unwrap();
+
+        renderer.update_lights(&scene.lights);
+
         renderer
             .resources
             .load_assets(

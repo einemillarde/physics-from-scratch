@@ -14,7 +14,6 @@ use {
     texture::TextureGpu,
 };
 
-#[derive(Clone)]
 pub struct GpuResources {
     pub meshes: Vec<MeshGpu>,
     pub textures: Vec<TextureGpu>,

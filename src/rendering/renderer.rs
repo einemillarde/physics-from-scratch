@@ -3,10 +3,11 @@ use {
         asset::AssetManager,
         rendering::{
             camera::{CameraGpu, CameraUniform},
+            light::LightGpu,
             pipeline::Pipeline,
             resources::{GpuResources, texture::TextureGpu},
         },
-        scene::{Scene, camera::Camera},
+        scene::{Scene, camera::Camera, light::Light},
     },
     std::{iter, sync::Arc},
     winit::window::Window,
@@ -17,8 +18,9 @@ pub struct Renderer {
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
     pub pipeline: Pipeline,
-    camera_gpu: CameraGpu,
-    depth_texture: TextureGpu,
+    pub camera_gpu: CameraGpu,
+    pub light_gpu: LightGpu,
+    pub depth_texture: TextureGpu,
     pub resources: GpuResources,
 }
 
@@ -90,6 +92,8 @@ impl Renderer {
 
         let camera_gpu = CameraGpu::new(&device, &pipeline.camera_layout);
 
+        let light_gpu = LightGpu::new(&device, &pipeline.light_layout);
+
         let depth_texture = TextureGpu::create_depth_texture(
             &device,
             physical_size.width,
@@ -109,6 +113,7 @@ impl Renderer {
             camera_gpu,
             depth_texture,
             resources,
+            light_gpu,
         })
     }
 
@@ -202,6 +207,8 @@ impl Renderer {
 
             self.camera_gpu.bind(&mut render_pass);
 
+            self.light_gpu.bind(&mut render_pass);
+
             scene.render(&mut render_pass, &self.resources, asset_manager);
         }
 
@@ -218,5 +225,14 @@ impl Renderer {
         };
 
         self.camera_gpu.set_uniform(&self.queue, uniform);
+    }
+
+    pub fn update_lights(&mut self, lights: &Vec<Light>) {
+        self.light_gpu.update(
+            &self.device,
+            &self.queue,
+            &self.pipeline.light_layout,
+            &lights[..],
+        );
     }
 }

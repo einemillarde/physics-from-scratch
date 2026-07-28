@@ -5,7 +5,6 @@ use crate::{
     scene::ObjectHandle,
 };
 
-#[derive(Clone, Debug)]
 pub struct Object {
     pub mesh: Option<MeshHandle>,
     pub transform: Transform,

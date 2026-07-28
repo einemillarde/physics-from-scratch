@@ -1,13 +1,12 @@
 use {glam::Mat4, wgpu::util::DeviceExt};
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+#[derive(Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct CameraUniform {
     pub view: [[f32; 4]; 4],
     pub projection: [[f32; 4]; 4],
 }
 
-#[derive(Clone)]
 pub struct CameraGpu {
     pub buffer: wgpu::Buffer,
     pub bind_group: wgpu::BindGroup,

@@ -27,12 +27,27 @@ struct Material {
     base_color_factor: vec4<f32>,
 
     emissive_factor: vec3<f32>,
-    _pad0: f32,
+    _pad0: u32,
 
     metallic_factor: f32,
     roughness_factor: f32,
+    _pad1: vec2<u32>
+};
 
-    _pad1: vec2<f32>,
+struct Light {
+    position_or_direction: vec3<f32>,
+    light_type: u32,
+
+    color: vec3<f32>,
+    intensity: f32,
+
+    _pad0: vec3<u32>,
+    range: f32,
+};
+
+struct LightCount {
+    _pad0: vec3<u32>,
+    count: u32,
 };
 
 @group(0) @binding(0)
@@ -53,6 +68,11 @@ var<uniform> camera: Camera;
 @group(2) @binding(0)
 var<uniform> object: Object;
 
+@group(3) @binding(0)
+var<storage, read> lights: array<Light>;
+
+@group(3) @binding(1)
+var<uniform> light_count: LightCount;
 
 @vertex
 fn vs_main(in: VertexInput) -> VertexOutput {
@@ -88,14 +108,38 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
     let world_normal = normalize(TBN * tangent_normal);
 
-    let light_dir = normalize(vec3<f32>(1.0, 1.0, 1.0));
+    var lighting = vec3<f32>(0.1);
 
-    let diffuse = max(dot(world_normal, light_dir), 0.0);
+    for (var i = 0u; i < light_count.count; i++) {
+        let light = lights[i];
 
-    let ambient = 0.1;
+        switch light.light_type {
+            case 0u: { // Point Light
+                let to_light = light.position_or_direction - in.position;
+                let distance = length(to_light);
+
+                if (distance > light.range) { continue; }
+
+                let light_direction = normalize(to_light);
+                let attenuation = light.intensity / (distance * distance + 0.01);
+                let diffuse = max(dot(world_normal, light_direction), 0.0);
+
+                lighting += light.color * attenuation * diffuse;
+            }
+            case 1u { // Directional Light
+                let light_direction = normalize(-light.position_or_direction);
+                let diffuse = max(dot(world_normal, light_direction), 0.0);
+
+                lighting += light.color * light.intensity * diffuse;
+            }
+            default: {
+                continue;
+            }
+        }
+    }
 
     return vec4<f32>(
-        base_color.rgb * (ambient + diffuse),
+        base_color.rgb * lighting,
         base_color.a
     );
 }

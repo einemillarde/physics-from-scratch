@@ -1,6 +1,5 @@
 use {crate::asset::mesh::Mesh, wgpu::util::DeviceExt};
 
-#[derive(Clone)]
 pub struct MeshGpu {
     vertex_buffer: wgpu::Buffer,
     index_buffer: wgpu::Buffer,

@@ -1,4 +1,3 @@
-#[derive(Clone, Debug)]
 pub struct Texture {
     pub pixels: Vec<u8>,
     pub width: u32,
@@ -6,7 +5,6 @@ pub struct Texture {
     pub color_space: Option<ColorSpace>,
 }
 
-#[derive(Clone, Debug)]
 pub enum ColorSpace {
     Linear,
     Srgb,

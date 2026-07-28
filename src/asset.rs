@@ -13,7 +13,6 @@ use {
     glam::{Vec3, Vec4},
 };
 
-#[derive(Clone)]
 pub struct AssetManager {
     pub textures: Vec<Texture>,
     pub meshes: Vec<Mesh>,
@@ -21,13 +20,13 @@ pub struct AssetManager {
     default_material_handle: Option<MaterialHandle>,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct MeshHandle(pub u32);
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct MaterialHandle(pub u32);
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Copy)]
 pub struct TextureHandle(pub u32);
 
 impl AssetManager {

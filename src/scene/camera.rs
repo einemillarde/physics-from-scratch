@@ -4,7 +4,6 @@ use {
     winit::keyboard::KeyCode,
 };
 
-#[derive(Debug, Clone, Copy)]
 pub struct Camera {
     pub transform: Transform,
     pub aspect_ratio: f32,

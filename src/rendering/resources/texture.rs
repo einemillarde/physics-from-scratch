@@ -1,6 +1,5 @@
 use crate::asset::texture::{ColorSpace, Texture};
 
-#[derive(Clone)]
 pub struct TextureGpu {
     pub texture: wgpu::Texture,
     pub view: wgpu::TextureView,

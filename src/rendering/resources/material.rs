@@ -7,20 +7,19 @@ use {
 };
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+#[derive(Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct MaterialUniform {
     pub base_color_factor: [f32; 4],
 
     pub emissive_factor: [f32; 3],
-    pub _pad0: f32,
+    pub _pad0: u32,
 
     pub metallic_factor: f32,
     pub roughness_factor: f32,
 
-    pub _pad1: [f32; 2],
+    pub _pad1: [u32; 2],
 }
 
-#[derive(Clone)]
 pub struct MaterialGpu {
     pub buffer: wgpu::Buffer,
     pub bind_group: wgpu::BindGroup,
@@ -124,12 +123,12 @@ impl From<&Material> for MaterialUniform {
             base_color_factor: material.base_color_factor.to_array(),
 
             emissive_factor: material.emissive_factor.to_array(),
-            _pad0: 0.0,
+            _pad0: 0,
 
             metallic_factor: material.metallic_factor,
             roughness_factor: material.roughness_factor,
 
-            _pad1: [0.0; 2],
+            _pad1: [0; 2],
         }
     }
 }
