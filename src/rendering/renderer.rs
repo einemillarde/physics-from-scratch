@@ -2,7 +2,7 @@ use {
     crate::{
         asset::AssetManager,
         rendering::{
-            camera::{CameraGpu, CameraUniform},
+            camera::CameraGpu,
             light::LightGpu,
             pipeline::Pipeline,
             resources::{GpuResources, texture::TextureGpu},
@@ -219,12 +219,7 @@ impl Renderer {
     }
 
     pub fn update_camera(&self, camera: &Camera) {
-        let uniform = CameraUniform {
-            view: camera.build_view_matrix().to_cols_array_2d(),
-            projection: camera.build_projection_matrix().to_cols_array_2d(),
-        };
-
-        self.camera_gpu.set_uniform(&self.queue, uniform);
+        self.camera_gpu.update(&self.queue, camera);
     }
 
     pub fn update_lights(&mut self, lights: &Vec<Light>) {

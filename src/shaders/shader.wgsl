@@ -15,6 +15,8 @@ struct VertexOutput {
 };
 
 struct Camera {
+    position: vec3<f32>,
+    _pad0: u32,
     view: mat4x4<f32>,
     projection: mat4x4<f32>,
 };
@@ -55,6 +57,9 @@ var<uniform> material: Material;
 
 @group(0) @binding(1)
 var base_color_texture: texture_2d<f32>;
+
+@group(0) @binding(2)
+var metallic_roughness_texture: texture_2d<f32>;
 
 @group(0) @binding(3)
 var normal_texture: texture_2d<f32>;
@@ -108,7 +113,16 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 
     let world_normal = normalize(TBN * tangent_normal);
 
-    var lighting = vec3<f32>(0.1);
+    let view_direction = normalize(camera.position - in.position);
+
+    let roughness = textureSample(metallic_roughness_texture, material_sampler, in.uv).g * material.roughness_factor;
+
+    let shininess = max(2.0, pow(1.0 - roughness, 4.0) * 128.0);
+
+    let metallic = textureSample(metallic_roughness_texture, material_sampler, in.uv).b * material.metallic_factor;
+
+    var diffuse_lighting = vec3<f32>(0.0);
+    var specular_lighting = vec3<f32>(0.0);
 
     for (var i = 0u; i < light_count.count; i++) {
         let light = lights[i];
@@ -121,16 +135,28 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
                 if (distance > light.range) { continue; }
 
                 let light_direction = normalize(to_light);
+
                 let attenuation = light.intensity / (distance * distance + 0.01);
                 let diffuse = max(dot(world_normal, light_direction), 0.0);
 
-                lighting += light.color * attenuation * diffuse;
+                let halfway_direction = normalize(light_direction + view_direction);
+                let specular = pow(max(dot(world_normal, halfway_direction), 0.0), shininess);
+                let specular_color = mix(vec3<f32>(1.0), base_color.rgb, metallic);
+
+                diffuse_lighting += light.color * attenuation * diffuse * (1.0 - metallic);
+                specular_lighting += light.color * attenuation * specular_color * specular;
             }
             case 1u { // Directional Light
                 let light_direction = normalize(-light.position_or_direction);
+
                 let diffuse = max(dot(world_normal, light_direction), 0.0);
 
-                lighting += light.color * light.intensity * diffuse;
+                let halfway_direction = normalize(light_direction + view_direction);
+                let specular = pow(max(dot(world_normal, halfway_direction), 0.0), shininess);
+                let specular_color = mix(vec3<f32>(1.0), base_color.rgb, metallic);
+
+                diffuse_lighting += light.color * light.intensity * diffuse * (1.0 - metallic);
+                specular_lighting += light.color * light.intensity * specular_color * specular;
             }
             default: {
                 continue;
@@ -138,8 +164,7 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         }
     }
 
-    return vec4<f32>(
-        base_color.rgb * lighting,
-        base_color.a
-    );
+    let final_color = base_color.rgb * diffuse_lighting + specular_lighting;
+
+    return vec4<f32>(final_color, base_color.a);
 }
